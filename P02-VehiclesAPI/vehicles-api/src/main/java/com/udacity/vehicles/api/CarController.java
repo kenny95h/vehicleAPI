@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 /**
  * Implements a REST-based controller for the Vehicles API.
@@ -61,7 +62,8 @@ class CarController {
          * TODO: Use the `assembler` on that car and return the resulting output.
          *   Update the first line as part of the above implementing.
          */
-        return assembler.toModel(new Car());
+        Car car = carService.findById(id);
+        return assembler.toModel(car);
     }
 
     /**
@@ -77,10 +79,16 @@ class CarController {
          * TODO: Use the `assembler` on that saved car and return as part of the response.
          *   Update the first line as part of the above implementing.
          */
-        EntityModel<Car> resource = assembler.toModel(new Car());
+        Car newCar = carService.save(car);
+        EntityModel<Car> resource = assembler.toModel(newCar);
+
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(newCar.getId()) // Assuming getId() returns the ID of the new car
+                .toUri();
 
         //Note: There will be error on this line till above TODOs are implemented
-        return ResponseEntity.created(new URI(resource.getId().expand().getHref())).body(resource);     
+        return ResponseEntity.created(uri).body(resource);
 
         
     }
@@ -99,7 +107,9 @@ class CarController {
          * TODO: Use the `assembler` on that updated car and return as part of the response.
          *   Update the first line as part of the above implementing.
          */
-        EntityModel<Car> resource = assembler.toModel(new Car());
+        car.setId(id);
+        carService.save(car);
+        EntityModel<Car> resource = assembler.toModel(car);
         return ResponseEntity.ok(resource);
     }
 
@@ -113,6 +123,7 @@ class CarController {
         /**
          * TODO: Use the Car Service to delete the requested vehicle.
          */
+        carService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }
